@@ -4,7 +4,7 @@ using Crestron.SimplSharp;
 using Crestron.SimplSharpPro;
 using Crestron.SimplSharpPro.DM.Streaming;
 
-namespace Masters_2024_MSS_521.Devices
+namespace Masters_2025_MSS_621_JW.Devices
 {
     public class Nvx351
     {

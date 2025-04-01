@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Masters 2024 MSS-621 JW", "Masters 2024 MSS-621 JW.csproj", "{E69B14A9-2D86-497E-A49E-5C0CD3F5485C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Masters 2025 MSS-621 JW", "Masters 2025 MSS-621 JW.csproj", "{E69B14A9-2D86-497E-A49E-5C0CD3F5485C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,11 +3,16 @@ using Crestron.SimplSharp;
 using Crestron.SimplSharpPro;
 using Crestron.SimplSharpPro.CrestronConnected;
 
-namespace Masters_2024_MSS_521.Devices
+namespace Masters_2025_MSS_621_JW.Devices
 {
     public class CrestronConnected
     {
         private readonly CrestronConnectedDisplayV2 _myDisplay;
+
+        public delegate void VolumeChangedHandler(ushort vol);
+        public delegate void MuteChangedHandler(bool mute);
+        public event VolumeChangedHandler VolumeChanged;
+        public event MuteChangedHandler MuteChanged;
 
         public CrestronConnected(uint ipId, CrestronControlSystem cs)
         {
@@ -34,8 +39,6 @@ namespace Masters_2024_MSS_521.Devices
         public ushort SourceFb { get; private set; }
         public bool OnFb { get; private set; }
         public bool RegisteredFb { get; }
-
-        public event EventHandler<Args> BaseEvent;
 
         // Public Methods
 
@@ -154,21 +157,20 @@ namespace Masters_2024_MSS_521.Devices
             {
                 case 37: // Volume Change found in the enum RoomViewConnectedDisplay.VolumeFeedbackEventId
                 {
-                    OnRaiseEvent(new Args("Volume"));
+                    VolumeChanged?.Invoke(_myDisplay.Audio.VolumeFeedback.UShortValue);
                     break;
                 }
 
                 case 17: //UnMute Feedback found in RoomViewConnectedDisplay.MuteOnFeedbackEventId
                 case 18: //Mute Feedback found in RoomViewConnectedDisplay.MuteOffFeedbackEventId
                     {
-                    OnRaiseEvent(new Args("Mute"));
+                    MuteChanged?.Invoke(_myDisplay.Audio.MuteOnFeedback.BoolValue);
                     break;
                 }
                 default: //Everything else
                 {
                     SourceFb = _myDisplay.Video.Source.CurrentSourceFeedback.UShortValue;
                     OnFb = _myDisplay.Power.PowerOnFeedback.BoolValue;
-                    OnRaiseEvent(new Args("BaseEvent"));
                     break;
                 }
             }
@@ -177,41 +179,6 @@ namespace Masters_2024_MSS_521.Devices
         private void MyDisplay_OnlineStatusChange(GenericBase currentDevice, OnlineOfflineEventArgs args)
         {
             OnlineFb = args.DeviceOnLine;
-            OnRaiseEvent(new Args("OnlineOffline"));
-        }
-
-        protected virtual void OnRaiseEvent(Args e)
-        {
-            // we make a copy because if subscribers un-subscribed during the event it can cause an exception
-            var raiseEvent = BaseEvent;
-            if (raiseEvent != null)
-            {
-                e.Online = _myDisplay.IsOnline;
-                e.Registered = _myDisplay.Registered;
-                e.OnFb = _myDisplay.Power.PowerOnFeedback.BoolValue;
-                e.Input = _myDisplay.Video.Source.CurrentSourceFeedback.UShortValue;
-                e.MuteOn = _myDisplay.Audio.MuteOnFeedback.BoolValue;
-                e.VolumeFb = _myDisplay.Audio.VolumeFeedback.UShortValue;
-
-                raiseEvent(this, e); // Fire the event
-            }
-        }
-
-        // Nested class used for our event args
-        public class Args
-        {
-            public Args(string message)
-            {
-                Message = message;
-            }
-
-            public string Message { get; set; }
-            public bool Online { get; set; }
-            public bool Registered { get; set; }
-            public bool OnFb { get; set; }
-            public ushort Input { get; set; }
-            public bool MuteOn { get; set; }
-            public ushort VolumeFb { get; set; }
         }
     }
 }

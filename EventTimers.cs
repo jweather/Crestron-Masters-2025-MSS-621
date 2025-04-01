@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Timers;
 using Crestron.SimplSharp;
-using Masters_2024_MSS_521.MessageSystem;
+using Crestron.SimplSharp.Ssh;
 
-namespace Masters_2024_MSS_521
+namespace Masters_2025_MSS_621_JW
 {
     public class EventTimers : IDisposable // see the dispose method below for why this is IDisposable
     {
@@ -17,6 +18,7 @@ namespace Masters_2024_MSS_521
          */
 
         private readonly Timer _myTimer;
+        private Dictionary<string, List<Action>> callbacks = new Dictionary<string, List<Action>>();
 
         public EventTimers()
         {
@@ -37,14 +39,25 @@ namespace Masters_2024_MSS_521
             _myTimer.Dispose();
         }
 
+        public void scheduleDaily(string when, Action callback) {
+            if (!callbacks.ContainsKey(when)) {
+                callbacks[when] = new List<Action>();
+            }
+            callbacks[when].Add(callback);
+        }
 
         private void MyTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             var now = DateTime.Now.ToString("HH:mm"); // convert to a nice formatted string to make it easy to compare
 
-            if (now == "22:00") // 10 pm
-            {
-                MessageBroker.SendMessage("SystemOff", new Message());
+            if (callbacks.ContainsKey(now)) {
+                foreach (var callback in callbacks[now]) {
+                    try {
+                        callback();
+                    } catch (Exception ex) {
+                        CrestronConsole.PrintLine("Exception in scheduled callback: " + ex);
+                    }
+                }
             }
         }
     }

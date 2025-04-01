@@ -4,7 +4,7 @@ using Crestron.SimplSharpPro;
 using Crestron.SimplSharpPro.DeviceSupport;
 using Crestron.SimplSharpPro.DM.AirMedia;
 
-namespace Masters_2024_MSS_521.Devices
+namespace Masters_2025_MSS_621_JW.Devices
 {
     /*
      * This is a class framework for BASIC addition operation of a Crestron Am3100 Airmedia device.
@@ -21,6 +21,12 @@ namespace Masters_2024_MSS_521.Devices
 
     public class AirMedia3100
     {
+        public delegate void PinCodeHandler(ushort pin);
+        public delegate void AddressHandler(string address);
+
+        public event PinCodeHandler PinCodeChanged;
+        public event AddressHandler AddressChanged;
+
         public enum ELoginCodeMode // This matches  eAirMediaLoginCodeMode
         {
             Disabled,
@@ -54,6 +60,7 @@ namespace Masters_2024_MSS_521.Devices
             else
             {
                 Registered = true;
+                SetPinCodeRandom();
             }
         }
 
@@ -65,8 +72,6 @@ namespace Masters_2024_MSS_521.Devices
         public string CurrentAddress { get; private set; }
         public string CurrentHostName { get; private set; }
 
-
-        public event EventHandler<Args> BaseEvent;
 
         //public Methods
 
@@ -109,10 +114,16 @@ namespace Masters_2024_MSS_521.Devices
         private void UpdateInformation() // Update our properties so they are always accurate
         {
             Online = _myAm3100.IsOnline;
-            CurrentPinCode = _myAm3100.AirMedia.LoginCodeFeedback.UShortValue;
+            if (_myAm3100.AirMedia.LoginCodeFeedback.UShortValue != CurrentPinCode) {
+                CurrentPinCode = _myAm3100.AirMedia.LoginCodeFeedback.UShortValue;
+                PinCodeChanged?.Invoke(CurrentPinCode);
+            }
+            if (_myAm3100.AirMedia.IpAddressFeedback.StringValue != CurrentAddress) {
+                CurrentAddress = _myAm3100.AirMedia.IpAddressFeedback.StringValue;
+                AddressChanged?.Invoke(CurrentAddress);
+            }
             PinCodeMode = (ELoginCodeMode)_myAm3100.AirMedia.LoginCodeModeFeedback;
             NumberOfUsers = _myAm3100.AirMedia.NumberOfUsersConnectedFeedback.UShortValue;
-            CurrentAddress = _myAm3100.AirMedia.IpAddressFeedback.StringValue;
             CurrentHostName = _myAm3100.AirMedia.HostNameFeedback.StringValue;
         }
 
@@ -121,57 +132,17 @@ namespace Masters_2024_MSS_521.Devices
         private void MyAm3100_OnlineStatusChange(GenericBase currentDevice, OnlineOfflineEventArgs args)
         {
             UpdateInformation();
-            OnRaiseEvent(new Args("OnlineOffline"));
         }
 
         private void MyAm3100_BaseEvent(GenericBase device, BaseEventArgs args)
         {
             UpdateInformation();
-            OnRaiseEvent(new Args("BaseEvent"));
         }
 
         private void AirMedia_AirMediaChange(object sender, GenericEventArgs args)
         {
             UpdateInformation();
-            OnRaiseEvent(new Args("AirMediaChange"));
         }
 
-        // Class Event
-
-        protected virtual void OnRaiseEvent(Args e)
-        {
-            // we make a copy because if subscribers unsubscribed during the event it can cause an exception to be thrown
-            var raiseEvent = BaseEvent;
-            if (raiseEvent != null)
-            {
-                e.Online = _myAm3100.IsOnline;
-                e.Registered = _myAm3100.Registered;
-                e.Users = _myAm3100.AirMedia.NumberOfUsersConnectedFeedback.UShortValue;
-                e.CurrentPinCode = _myAm3100.AirMedia.LoginCodeFeedback.UShortValue;
-                e.PinCodeMode = (ELoginCodeMode)_myAm3100.AirMedia.LoginCodeModeFeedback;
-                e.CurrentAddress = _myAm3100.AirMedia.IpAddressFeedback.StringValue;
-                e.CurrentHostName = _myAm3100.AirMedia.HostNameFeedback.StringValue;
-
-                raiseEvent(this, e); // Fire the event
-            }
-        }
-
-        // Nested class used for our event args
-        public class Args
-        {
-            public Args(string message)
-            {
-                Message = message;
-            }
-
-            public string Message { get; set; }
-            public bool Online { get; set; }
-            public bool Registered { get; set; }
-            public uint Users { get; set; }
-            public ushort CurrentPinCode { get; set; }
-            public ELoginCodeMode PinCodeMode { get; set; }
-            public string CurrentAddress { get; set; }
-            public string CurrentHostName { get; set; }
-        }
     }
 }
