@@ -91,18 +91,18 @@ namespace Masters_2025_MSS_621_JW
             switch (index) {
                 case 0:
                     MyNvx.SetInput(Nvx351.ESource.Hdmi1);
-                    TP.SourceControls("MediaControl");
+                    TP.ShowSourceControls(Xpanel.SourceControls.MediaInfo);
                     break;
                 case 1:
                     MyNvx.SetInput(Nvx351.ESource.Hdmi2);
-                    TP.SourceControls("AirMediaInfo");
+                    TP.ShowSourceControls(Xpanel.SourceControls.AirMediaInfo);
                     break;
                 default:
                     int nvxIndex = index - 2;
                     NvxSource source = NvxProducer.sources[nvxIndex];
                     MyNvx.SetInput(Nvx351.ESource.Stream);
                     MyNvx.SetStreamLocation(source.ip);
-                    TP.SourceControls("NvxInfo");
+                    TP.ShowSourceControls(Xpanel.SourceControls.NvxInfo);
                     TP.UpdateNvxAddress(source.ip);
                     break;
             }

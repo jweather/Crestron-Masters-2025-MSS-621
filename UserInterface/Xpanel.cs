@@ -22,7 +22,8 @@ namespace Masters_2025_MSS_621_JW.UserInterface
 
         // state of the panel
         bool confirmShutdown = false;
-        string sourceControls = "";
+        public enum SourceControls { None, MediaInfo, AirMediaInfo, NvxInfo };
+        SourceControls sourceControls = SourceControls.None;
 
         public Xpanel(uint ipId, ControlSystem cs)
         {
@@ -118,9 +119,9 @@ namespace Masters_2025_MSS_621_JW.UserInterface
 
             _myContract.MainPage.PowerOffOk.PowerOffOk_Visibility(confirmShutdown);
 
-            _myContract.MainPage.MediaControl.MediaControl_Visibility(sourceControls == "MediaControl");
-            _myContract.MainPage.AirMediaInfo.AirMediaInfo_Visibility(sourceControls == "AirMediaInfo");
-            _myContract.MainPage.NvxInfo.NvxInfo_Visibility(sourceControls == "NvxInfo");
+            _myContract.MainPage.MediaControl.MediaControl_Visibility(sourceControls == SourceControls.MediaInfo);
+            _myContract.MainPage.AirMediaInfo.AirMediaInfo_Visibility(sourceControls == SourceControls.AirMediaInfo);
+            _myContract.MainPage.NvxInfo.NvxInfo_Visibility(sourceControls == SourceControls.NvxInfo);
         }
 
         #endregion
@@ -172,7 +173,7 @@ namespace Masters_2025_MSS_621_JW.UserInterface
             _myContract.NvxInfo.NvxAddressFb_Indirect(addr);
         }
 
-        internal void SourceControls(string v) {
+        public void ShowSourceControls(SourceControls v) {
             sourceControls = v;
             RefreshPage();
         }
