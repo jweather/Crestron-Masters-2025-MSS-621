@@ -2,11 +2,12 @@
 Schema = "1.0.0.0"
 CreatedByAppHost = "1.3001.21.0"
 Created = 2024-02-21 09:39:35.849673-05:00
-LastModifiedByAppHost = "1.3401.20.0"
-Modified = 2025-03-31 14:53:06.673805-04:00
+LastModifiedByAppHost = "2.201.20.0"
+Modified = 2025-04-01 16:03:54.429474-04:00
 CreatedByProjectApp = "1.3001.21.0"
-LastModifiedByProjectApp = "1.3401.20.0"
+LastModifiedByProjectApp = "1.3801.23.0"
 MinimumProjectApp = "1.2600.1"
+MinimumAppHost = "2.0.0"
 
 {DeviceResolutionSource}
 []
@@ -17,9 +18,10 @@ MinimumProjectApp = "1.2600.1"
 Name = "MSSXpanel"
 ThemeId = "light-theme.css"
 ThemePageColor = "#ffffff"
-SdkId = "CH5:2.7.0"
+SdkId = "CH5:2.12.0"
 ComponentKey = "UiEditor"
+Id = "68509def-98d7-4986-bc64-7169b378a91b"
 DeviceResolutionIds = "D-L-TSW0760-1262-0740"
 ipId = "04"
-ProjectSchemaVersion = "4"
+ProjectSchemaVersion = "6"
 

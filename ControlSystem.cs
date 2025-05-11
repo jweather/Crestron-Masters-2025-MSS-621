@@ -5,23 +5,20 @@ using Crestron.SimplSharpPro;
 using Crestron.SimplSharpPro.CrestronThread;
 using Masters_2025_MSS_621_JW.Devices;
 using Masters_2025_MSS_621_JW.UserInterface;
-using MSSXpanel;
 
 
 namespace Masters_2025_MSS_621_JW
 {
     public class ControlSystem : CrestronControlSystem
     {
-        public static ControlSystem global;
         public EventTimers SetupTimers;
 
-        public Xpanel xpanel;
+        public Xpanel TP;
         public AirMedia3100 MyAirMedia;
         public CrestronConnected MyCrestronConnected;
         public Nvx351 MyNvx;
         public Audio audio;
-
-        List<string> GlobalNvxAddresses = new List<string>();
+        public NvxProducer NvxProducer;
 
         private bool power = false;
         public bool SystemPower {
@@ -39,7 +36,6 @@ namespace Masters_2025_MSS_621_JW
 
         public ControlSystem()
         {
-            global = this;
             try
             {
                 Thread.MaxNumberOfUserThreads = 20;
@@ -54,40 +50,25 @@ namespace Masters_2025_MSS_621_JW
         {
             try
             {
-                // I prefer to have all the hardware devices set up in one place, but YMMV
-                xpanel = new Xpanel(0x04, this);
+                // I prefer to have all the hardware devices set up in one place
+                TP = new Xpanel(0x04, this);
                 MyNvx = new Nvx351(0x11, Nvx351.EMode.Rx, this);
                 MyAirMedia = new AirMedia3100(0x22, this);
                 MyCrestronConnected = new CrestronConnected(0x09, this);
 
                 // software components
-                audio = (Audio)new AudioTV(MyCrestronConnected, xpanel);
-                SetupTimers = new EventTimers(); // timers such as automatic shutoff
+                audio = (Audio)new AudioTV(MyCrestronConnected, TP);
+                SetupTimers = new EventTimers();
                 SetupTimers.scheduleDaily("22:00", SystemOff);
+                NvxProducer = new NvxProducer();
 
                 // connect events
-                xpanel.SourceSelect += SourceSelect;
+                TP.SourceSelect += SourceSelect;
+                TP.setupSources(NvxProducer);
 
-                MyAirMedia.AddressChanged += xpanel.UpdateAirMediaAddress;
-                MyAirMedia.PinCodeChanged += xpanel.UpdateAirMediaPin;
+                MyAirMedia.AddressChanged += TP.UpdateAirMediaAddress;
+                MyAirMedia.PinCodeChanged += TP.UpdateAirMediaPin;
 
-                // configure components
-                xpanel.SetSources(new List<string> {
-                    "Apple TV",
-                    "AirMedia",
-                    "Global Source 1",
-                    "Global Source 2",
-                    "Global Source 3",
-                    "Global Source 4"
-                });
-
-
-                // Populate the NVX global addresses.   This would be handy to have populated from a file that was read on startup..
-                // Maybe add a configuration class that does this?  NvxProducer?
-                GlobalNvxAddresses.Add("192.168.8.2");
-                GlobalNvxAddresses.Add("192.168.8.4");
-                GlobalNvxAddresses.Add("192.168.8.6");
-                GlobalNvxAddresses.Add("192.168.8.8");
             }
             catch (Exception e)
             {
@@ -110,16 +91,19 @@ namespace Masters_2025_MSS_621_JW
             switch (index) {
                 case 0:
                     MyNvx.SetInput(Nvx351.ESource.Hdmi1);
-                    xpanel.SourceControls("MediaControl");
+                    TP.SourceControls("MediaControl");
                     break;
                 case 1:
                     MyNvx.SetInput(Nvx351.ESource.Hdmi2);
-                    xpanel.SourceControls("AirMediaInfo");
+                    TP.SourceControls("AirMediaInfo");
                     break;
                 default:
+                    int nvxIndex = index - 2;
+                    NvxSource source = NvxProducer.sources[nvxIndex];
                     MyNvx.SetInput(Nvx351.ESource.Stream);
-                    MyNvx.SetStreamLocation(GlobalNvxAddresses[index - 2]);
-                    xpanel.SourceControls("NvxInfo");
+                    MyNvx.SetStreamLocation(source.ip);
+                    TP.SourceControls("NvxInfo");
+                    TP.UpdateNvxAddress(source.ip);
                     break;
             }
         }

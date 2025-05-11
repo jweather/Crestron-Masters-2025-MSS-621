@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Masters_2025_MSS_621_JW.Devices;
+﻿using Masters_2025_MSS_621_JW.Devices;
 using Masters_2025_MSS_621_JW.UserInterface;
 
 namespace Masters_2025_MSS_621_JW {

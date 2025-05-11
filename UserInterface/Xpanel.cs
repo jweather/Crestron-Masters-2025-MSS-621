@@ -1,8 +1,7 @@
 ﻿using Crestron.SimplSharpPro;
 using Crestron.SimplSharpPro.UI;
+using System.Collections.Generic;
 using MSSXpanel;
-using System;
-using System.Collections.Generic;// Bring in your contract namespace
 
 namespace Masters_2025_MSS_621_JW.UserInterface
 {
@@ -19,6 +18,7 @@ namespace Masters_2025_MSS_621_JW.UserInterface
         private ControlSystem cs;
         private Audio audio;
         private List<string> sources = new List<string>();
+        private NvxProducer nvx;
 
         // state of the panel
         bool confirmShutdown = false;
@@ -43,14 +43,32 @@ namespace Masters_2025_MSS_621_JW.UserInterface
             _myContract.HeaderBar.PowerButton_PressEvent += HeaderBar_PowerButton_PressEvent;
             _myContract.PowerOffOk.PowerOffNoButton_PressEvent += PowerOffOk_PowerOffNoButton_PressEvent;
 
-            //Lets populate the source list
+            // populate the source list
             _myContract.MainPage.SourceList.Button_Text(0, "Apple TV");
             _myContract.MainPage.SourceList.Button_Text(1, "Airmedia");
-            for (ushort i = 2; i <= 5; i++) _myContract.MainPage.SourceList.Button_Text(i, "Global Source " + i);
 
-
-            // Lets set the room name header bar 
+            // set the room name header bar 
             _myContract.HeaderBar.RoomNameLabel_Indirect("MSS-621 Conference Room");
+        }
+
+        public void setupSources(NvxProducer nvx) {
+            this.nvx = nvx;
+            nvx.SourcesChanged += Nvx_SourcesChanged;
+            refreshSources();
+        }
+
+        private void Nvx_SourcesChanged() {
+            refreshSources();
+        }
+
+        private void refreshSources() {
+            for (ushort i = 2; i<6; i++) {
+                int idx = i-2;
+                if (idx < nvx.sources.Count)
+                    _myContract.MainPage.SourceList.Button_Text(i, nvx.sources[idx].name);
+                else
+                    _myContract.MainPage.SourceList.Button_Text(i, "");
+            }
         }
 
         // If the xpanel goes offline or online this will make sure we go back to the page the program wants us on
@@ -62,7 +80,7 @@ namespace Masters_2025_MSS_621_JW.UserInterface
         private void SourceList_Button_PressEvent(object sender, IndexedButtonEventArgs e) {
             if (!e.SigArgs.Sig.BoolValue) return;
             SourceSelect?.Invoke(e.ButtonIndex);
-            for (ushort i=0; i<=5; i++) {
+            for (ushort i=0; i<6; i++) {
                 _myContract.MainPage.SourceList.Button_Selected(i, i==e.ButtonIndex);
             }
         }
@@ -150,11 +168,8 @@ namespace Masters_2025_MSS_621_JW.UserInterface
             _myContract.AirMediaInfo.AirmediaAddressFb_Indirect(addr);
         }
 
-        internal void SetSources(List<string> list) {
-            sources = list;
-            for (ushort i=0; i<sources.Count; i++) {
-                _myContract.MainPage.SourceList.Button_Text(i, sources[i]);
-            }
+        public void UpdateNvxAddress(string addr) {
+            _myContract.NvxInfo.NvxAddressFb_Indirect(addr);
         }
 
         internal void SourceControls(string v) {
